@@ -1,4 +1,4 @@
-# jd-share V1.2.1
+# jd-share V1.2.2
 
 Public browser frontend for JD Share, created by Jamie Reddin.
 

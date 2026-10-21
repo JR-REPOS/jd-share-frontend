@@ -18,7 +18,7 @@ const AdvancedView = (() => {
           const missing=doc.createElement('option');missing.value=device();missing.textContent='Selected PC unavailable';select.appendChild(missing);
         }
         select.value=device();
-        say('deviceMessage','Commands target the selected PC. Uploaded phone files always go to the server hosting this app.');
+        say('deviceMessage',result.warning || 'Commands target the selected PC. Uploaded phone files always go to the server hosting this app.');
       } catch(e) {say('deviceMessage',e.message);}
     }
     if(device()) {

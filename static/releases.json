@@ -1,6 +1,16 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "releases": [
+    {
+      "version": "1.2.2",
+      "timestamp": "2026-10-21T19:39:13+01:00",
+      "title": "Restore download display and correct connection checks",
+      "changes": [
+        "Prevent cached JavaScript from hiding downloads: version all local scripts/styles with each release, revalidate local assets, and keep file rows visible if sorting is unavailable.",
+        "Check the authenticated device session before diagnosing account failure. Retry PC discovery independently and label cached or unavailable discovery accurately.",
+        "Separate display errors from connection errors and keep optional logging/history storage failures from blocking live download status."
+      ]
+    },
     {
       "version": "1.2.1",
       "timestamp": "2026-10-21T18:49:06+01:00",

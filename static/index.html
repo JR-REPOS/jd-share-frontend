@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#12161b">
 <link rel="manifest" href="manifest.json">
 <title>JD Share</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=1.2.2">
 </head>
 <body>
 <main>
@@ -140,15 +140,15 @@
   </details></div></dialog><dialog id="statisticsDialog" class="utility-dialog" aria-labelledby="statisticsTitle"><div class="changes-heading"><h2 id="statisticsTitle">Download statistics</h2><button type="button" id="closeStatistics">Close</button></div><div class="dialog-body"><p id="statsScope" class="hint"></p><dl id="statisticsGrid" class="statistics-grid"></dl><h3>File types</h3><ul id="fileTypes"></ul><p class="hint">All-time means since recording started on this backend. Active time and speed are sampled every five seconds while the server runs; outages and shutdowns are excluded. Quickest is shown only when the full transfer was observed from zero bytes. Pre-existing finished files count once, with unknown duration.</p></div></dialog><dialog id="logsDialog" class="utility-dialog" aria-labelledby="logsTitle"><div class="changes-heading"><h2 id="logsTitle">System logs</h2><button type="button" id="closeLogs">Close</button></div><div class="dialog-body"><label class="download-choice"><input id="recordLogs" type="checkbox">Record system logs (off by default)</label><p class="hint">Records HTTP method, route template, response status and monitor failures only. No passwords, access tokens, link URLs, request bodies or raw errors. Keeps the latest 500 entries on this server; the preference survives restart.</p><div class="row controls"><button id="refreshLogs" type="button">Refresh</button><button id="exportLogs" type="button">Download logs</button><button id="clearLogs" type="button">Clear logs</button></div><p id="logsMessage" class="hint" role="status"></p><pre id="systemLogs" tabindex="0"></pre></div></dialog><dialog id="stepDialog" class="utility-dialog" aria-labelledby="stepTitle"><div class="changes-heading"><h2 id="stepTitle">Step by Step setup</h2><button type="button" id="closeStep">Close</button></div><div class="dialog-body"><ol class="setup-steps"><li><strong>Run JD Share on your PC.</strong> Copy <code>.env.example</code> to <code>.env</code>, set an API token and start <code>python app.py</code>. Keep this PC running.</li><li><strong>Get your My.JDownloader login.</strong> Register or sign in at <a href="https://my.jdownloader.org/" target="_blank" rel="noopener noreferrer">my.jdownloader.org</a>. Example email: <code>name@example.com</code>. Use that account’s password.</li><li><strong>Connect desktop JDownloader.</strong> Open Settings → My.JDownloader in the desktop app and enter the same login. Copy the exact device name shown there, e.g. <code>JDownloader@Home-PC</code>. Blank selects the first device.</li><li><strong>Connect this browser.</strong> In Settings, enter the backend address (e.g. <code>http://localhost:8787</code> on the same PC, or your trusted HTTPS tunnel URL from another device). Copy API_TOKEN from the backend .env into Access token, then Save connection. Pages needs HTTPS and the allowed origin <code>https://jr-repos.github.io</code>.</li><li><strong>Generate a token if needed.</strong> Use Generate random token. Save on backend PC, restart the backend, then save that new token in the browser connection. This token belongs to JD Share, not My.JDownloader.</li><li><strong>Set server details.</strong> Example upload folder: <code>./uploads</code> on the backend. Bind host <code>0.0.0.0</code> listens on the network; <code>127.0.0.1</code> is local only. Example port: <code>8787</code>. These are not your public HTTPS URL.</li><li><strong>Optional Siri Shortcut.</strong> Open Siri-Shortcut for the setup guide. A published iCloud link looks like <code>https://www.icloud.com/shortcuts/…</code>. No account password is needed in the Shortcut.</li><li><strong>Save, restart, test.</strong> Save account/server details, restart JD Share, reopen Settings and use Test connection. Check backend, account and selected PC results separately.</li></ol></div></dialog>
 </main>
 
-<script src="connection.js"></script>
-<script src="settings.js"></script>
-<script src="downloads.js"></script>
-<script src="pending.js"></script>
-<script src="file-tools.js"></script>
-<script src="activity.js"></script>
-<script src="advanced.js"></script>
-<script src="releases.js"></script>
-<script src="hub.js"></script>
+<script src="connection.js?v=1.2.2"></script>
+<script src="settings.js?v=1.2.2"></script>
+<script src="downloads.js?v=1.2.2"></script>
+<script src="pending.js?v=1.2.2"></script>
+<script src="file-tools.js?v=1.2.2"></script>
+<script src="activity.js?v=1.2.2"></script>
+<script src="advanced.js?v=1.2.2"></script>
+<script src="releases.js?v=1.2.2"></script>
+<script src="hub.js?v=1.2.2"></script>
 <script>
 const $ = id => document.getElementById(id);
 const connection=Connection.create({storage:localStorage,location:typeof location!=='undefined'?location:null});
@@ -313,6 +313,7 @@ let lastSuccess = 0;
 let lastAttemptFailed = false;
 let renderedStale = false;
 let statusError = "";
+let displayError = "";
 let statusAuthError = false;
 function statusFreshness() {
   if (!lastStatus || !tok()) return;
@@ -330,8 +331,8 @@ function statusFreshness() {
     $("connection").textContent = `Showing last known progress · last updated ${age}s ago. ${lastAttemptFailed ? statusError : "Checking for an update…"}`;
     $("connection").className = "connection error";
   } else {
-    $("connection").textContent = `Connected to JDownloader · updated ${age < 2 ? "just now" : age + "s ago"}`;
-    $("connection").className = "connection";
+    $("connection").textContent = `Connected to JDownloader · updated ${age < 2 ? "just now" : age + "s ago"}` + (displayError ? ' · '+displayError : '') + (lastStatus.insightsAvailable === false ? ' · History recording unavailable.' : '');
+    $("connection").className = "connection" + (displayError || lastStatus.insightsAvailable === false ? " error" : "");
   }
 }
 async function refresh() {
@@ -361,8 +362,8 @@ async function refresh() {
     const active = s.links.filter(l => DownloadView.describe(l, s.state).active).length;
     const finished = s.links.filter(l => l.finished === true).length;
     $("downloadSummary").textContent = `${active} active · ${s.links.length} total · ${finished} finished`;
-    if(s.deviceId)activityView.setScope(s.deviceId);
-    activityView.observe(s.links); fileTools.confirmed(s.links, false); renderDownloads(false);
+    try {if(s.deviceId)activityView.setScope(s.deviceId);activityView.observe(s.links);} catch (_) {$("activityMessage").textContent="Local history could not be updated. Download status is still available.";}
+    fileTools.confirmed(s.links, false); renderDownloads(false);
     statusFreshness();
   } catch(e) {
     if (tok() !== requestToken) return;
@@ -390,14 +391,29 @@ async function refresh() {
 $("refreshStatus").onclick = refresh;
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { statusFreshness(); refresh(); } });
 function renderDownloads(stale = lastAttemptFailed || Date.now()-lastSuccess >= 15000) {
+  try {renderDownloadRows(stale);displayError="";}
+  catch (_) {
+    displayError="Download display failed. Reload the app to refresh its files.";
+    $("connection").textContent="JDownloader status received · "+displayError;
+    $("connection").className="connection error";
+    selectedDownloads.clear();fileTools.reset();
+    for(const id of ['bulkEnable','bulkDisable','bulkApply'])$(id).disabled=true;
+    const item=document.createElement('li');item.className='empty';item.textContent=displayError;$("list").replaceChildren(item);
+  }
+}
+function renderDownloadRows(stale) {
   if (!lastStatus) return;
   const search=$("downloadSearch").value.trim().toLocaleLowerCase();
   const selectable = new Set(lastStatus.links.filter(l=>l.uuid && l.finished !== true).map(l=>String(l.uuid)));
   for (const id of selectedDownloads) if (!selectable.has(id)) selectedDownloads.delete(id);
   const filter=$("downloadFilter").value || 'all';
   const grouped=$("downloadGrouping").value === 'packages';
-  const links=DownloadView.sort(DownloadView.select(lastStatus.links,lastStatus.state,search,filter),lastStatus.state,$("downloadSort").value);
+  const filtered=DownloadView.select(lastStatus.links,lastStatus.state,search,filter);
+  const canSort=typeof DownloadView.sort === 'function';
+  const links=canSort ? DownloadView.sort(filtered,lastStatus.state,$("downloadSort").value) : filtered;
+  $("downloadSort").disabled=!canSort;
   $("downloadMatches").textContent=(search || filter !== 'all') ? `${links.length} of ${lastStatus.links.length} files match` : '';
+  if(!canSort)$("downloadMatches").textContent+=' Sorting unavailable: reload the app to refresh its files.';
   $("packageButtons").hidden=!grouped;
   DownloadView.render($("list"),links,lastStatus.state,stale,{
     onManage:id=>fileTools.open(id),disabled:fileTools.busy() || bulkBusy,grouped,
