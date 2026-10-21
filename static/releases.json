@@ -1,6 +1,14 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "releases": [
+    {
+      "version": "1.2.1",
+      "timestamp": "2026-10-21T18:49:06+01:00",
+      "title": "Keep closed Settings clear during delayed loads",
+      "changes": [
+        "Prevent delayed settings requests from repopulating masked secrets after the popup closes; verify saved values reload on reopening."
+      ]
+    },
     {
       "version": "1.2.0",
       "timestamp": "2026-10-21T18:44:26+01:00",
