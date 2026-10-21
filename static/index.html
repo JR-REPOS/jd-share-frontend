@@ -21,13 +21,14 @@
     <span class="state" id="state" role="status">Connecting…</span>
   </div>
 
-  <p class="connection" id="connection">Checking connection…</p>
+  <p class="connection" id="connection">Checking connection…</p><div class="disk-line"><span id="diskSpace">Backend storage not checked.</span><button id="refreshDisk" type="button">Check storage</button></div>
 
   <section class="composer" aria-labelledby="addTitle"><h2 id="addTitle">Add a link</h2>
   <label class="sr-only" for="links">Links to send to JDownloader</label>
   <textarea id="links" placeholder="Paste one or more links" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
   <details class="package-options"><summary>Package name <span class="optional">optional</span></summary><label class="sr-only" for="pkg">Package name</label><div class="row"><input type="text" id="pkg" placeholder="Group these files into a package"></div></details>
   <details class="package-options"><summary>Download folder <span class="optional">optional</span></summary><label class="search-label" for="destination">Folder on the JDownloader PC</label><input type="text" id="destination" placeholder="Leave blank for JDownloader’s default" autocomplete="off"><p class="hint">Applies to new links only. Enter a path on the PC running JDownloader. Existing files are not moved; JDownloader’s package rules still apply.</p></details>
+  <details class="package-options"><summary>Download presets</summary><label class="search-label" for="presetPicker">Saved package, folder and PC</label><select id="presetPicker"><option value="">Choose preset…</option></select><input id="presetName" aria-label="Preset name" placeholder="Preset name" maxlength="80"><div class="row controls"><button id="savePreset" type="button">Save current</button><button id="applyPreset" type="button">Apply preset</button><button id="deletePreset" type="button">Delete preset</button></div><p id="presetMessage" class="hint" role="status"></p></details><div id="duplicateWarning" class="hint" role="status"></div>
   <div class="row">
     <button class="primary" id="add">Find files</button>
     <button id="addOnly">Add only</button>
@@ -65,6 +66,7 @@
       <label for="downloadGrouping">View<select id="downloadGrouping"><option value="files">Files</option><option value="packages">Packages</option></select></label>
     </div>
     <div class="row" id="packageButtons" hidden><button id="expandPackages" type="button">Expand all</button><button id="collapsePackages" type="button">Collapse all</button></div>
+    <label class="search-label" for="downloadSort">Sort downloads</label><select id="downloadSort"><option value="queue">Queue order</option><option value="name">Filename A–Z</option><option value="size">Size · largest first</option><option value="progress">Progress · highest first</option><option value="status">Status A–Z</option></select>
     <p id="downloadMatches" class="hint" role="status"></p>
     <details class="bulk-controls"><summary>Selected-file actions <span id="bulkCount">0 selected</span></summary>
       <p class="hint">Select unfinished files below (up to 100). Selection includes files hidden by search, filters or collapsed packages. These actions change selected files only and do not start the controller.</p>
@@ -107,14 +109,8 @@
     <label class="search-label" for="scheduleAction">Controller action</label><select id="scheduleAction"><option value="stop">Stop all downloads</option><option value="start">Start enabled downloads</option><option value="pause">Pause all downloads</option><option value="resume">Resume all downloads</option></select>
     <label class="search-label" for="scheduleTime">Date and time on this device</label><input id="scheduleTime" type="datetime-local"><div class="row"><button id="saveSchedule" type="button">Save schedule</button><button id="refreshSchedules" type="button">Refresh schedules</button></div><p id="scheduleMessage" class="msg" role="status"></p><ul id="scheduleList" aria-label="Controller schedules"></ul>
   </details>
-  <details class="sharing-panel"><summary>Share links from iPhone</summary><p class="hint">A Shortcut can open shared links here for review, using this browser’s saved token and selected PC. Nothing is submitted or downloaded automatically.</p><button id="installShortcut" type="button">Install Siri Shortcut</button> <a id="shortcutInstallLink" hidden target="_blank" rel="noopener noreferrer">Open Shortcut setup</a><p id="shortcutMessage" role="status" class="hint"></p><a href="sharing.html">Shortcut setup and versioned downloads</a></details>
-  <details class="activity-panel"><summary>History and notifications</summary>
-    <label class="download-choice"><input type="checkbox" id="recordHistory">Record completed files on this browser</label>
-    <p class="hint">Opt-in history keeps up to 200 completions observed while this page is open. It does not reconstruct older downloads or prove a missing file finished. Times show when completion was first observed (UTC). Filenames remain on this browser. Saving a connection token clears this history.</p>
-    <button id="enableNotifications" type="button">Enable completion notifications</button><p id="notificationHelp" class="hint"></p>
-    <p id="activityMessage" class="msg" role="status"></p>
-    <ul id="historyList" aria-label="Download history"></ul><button id="clearHistory" type="button">Clear history</button>
-  </details>
+
+
   <div class="utilities">
     <details id="transferDetails"><summary>Send a file to your PC</summary>
       <p class="hint">Upload to the server hosting JD Share. Changing the JDownloader PC above does not redirect these uploads.</p>
@@ -123,17 +119,25 @@
       <button id="up" type="button" class="primary upload-button" disabled>Upload to PC</button>
       <p id="uploadMessage" class="msg" role="status" aria-live="polite"></p>
     </details>
-    <details id="connectionSettings"><summary>Connection settings</summary>
-      <p class="hint">Save the app's access token on this browser to connect. Use Settings above to edit the backend’s account and server configuration.</p>
-      <label class="search-label" for="backendUrl">Backend address <span class="optional">blank = this server</span></label><div class="row"><input id="backendUrl" type="url" placeholder="https://your-pc.example"><button id="saveBackend" type="button">Save address</button></div><p class="hint">GitHub Pages needs your running PC’s HTTPS backend address. Only enter a backend you trust with your token. Allow this page’s origin in backend Settings.</p><label class="search-label" for="token">Access token</label>
-      <div class="row"><input type="password" id="token" placeholder="API token" autocomplete="off"><button id="saveTok" type="button">Save</button></div>
-    </details>
+
   </div>
-  <section class="desktop-panel"><button id="openDesktop" type="button">Open JDownloader App</button><p class="hint">Opens JDownloader on the machine running the JD Share backend, using its desktop session. It does not open a program on this phone or a different selected PC.</p><p id="desktopMessage" class="msg" role="status"></p></section>
-  <footer><div>JD Share · <span id="appVersion">Loading version…</span></div><button id="changesButton" type="button" class="quiet">Changes</button><div class="desktop-download"><label for="desktopOS" class="sr-only">Desktop operating system</label><select id="desktopOS"><option value="choose">Choose PC OS</option><option>Windows</option><option>macOS</option><option>Linux</option></select><a id="downloadDesktop" href="https://jdownloader.org/jdownloader2" target="_blank" rel="noopener noreferrer">Download JDownloader Desktop</a><p id="desktopDownloadHint" class="hint"></p></div><div class="creator-credit"><p>Created by <strong>Jamie Reddin</strong></p><nav class="social-links" aria-label="Jamie Reddin social accounts"><a class="social-button" href="https://jayreddin.github.io" target="_blank" rel="noopener noreferrer">GitHub</a><a class="social-button" href="https://discord.com/users/210066853354143744" target="_blank" rel="noopener noreferrer">Discord</a><a class="social-button" href="https://x.com/jayreddin" target="_blank" rel="noopener noreferrer">X</a><a class="social-button" href="https://www.reddit.com/u/Jayreddin" target="_blank" rel="noopener noreferrer">Reddit</a></nav></div></footer>
+
+  <div class="footer-actions"><button id="changesButton" type="button">Changes</button><button id="downloadButton" type="button">Download</button><button id="openDesktop" type="button">Open JDownloader App</button><button id="siriButton" type="button">Siri-Shortcut</button><button id="historyButton" type="button">History</button></div><p id="desktopMessage" class="msg" role="status"></p>
+  <footer><div class="footer-line"><strong>JD Share - <span id="appVersion">Loading version…</span></strong><nav class="social-links" aria-label="Jamie Reddin social accounts"><a class="social-button" href="https://jayreddin.github.io" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub"><img src="icons/github.svg" width="24" height="24" alt="GitHub"></a><a class="social-button" href="https://discord.com/users/210066853354143744" target="_blank" rel="noopener noreferrer" aria-label="Discord" title="Discord"><img src="icons/discord.svg" width="24" height="24" alt="Discord"></a><a class="social-button" href="https://x.com/jayreddin" target="_blank" rel="noopener noreferrer" aria-label="X" title="X"><img src="icons/x.svg" width="24" height="24" alt="X"></a><a class="social-button" href="https://www.reddit.com/u/Jayreddin" target="_blank" rel="noopener noreferrer" aria-label="Reddit" title="Reddit"><img src="icons/reddit.svg" width="24" height="24" alt="Reddit"></a></nav></div><p class="creator-line">Created by <strong>Jamie Reddin</strong></p></footer>
   <dialog id="changesDialog" aria-labelledby="changesTitle"><div class="changes-heading"><h2 id="changesTitle">What’s new</h2><button id="closeChanges" type="button" class="quiet" aria-label="Close changes">Close</button></div><p id="changesMessage" class="hint" role="status"></p><ol id="changesList" aria-label="Release history" tabindex="0"></ol></dialog>
 
-<dialog id="settingsDialog" aria-labelledby="settingsTitle"><div class="changes-heading"><h2 id="settingsTitle">Account &amp; server settings</h2><button id="closeSettings" type="button">Close</button></div><div class="settings-scroll"><p class="hint">Saved privately on the backend machine between sessions. Your My.JDownloader password is not stored in browser storage or uploaded to GitHub. The .env file is plaintext protected by that machine’s permissions.</p><form id="settingsForm"><label class="search-label" for="cfg_MYJD_EMAIL">My.JDownloader email</label><input id="cfg_MYJD_EMAIL" type="email" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_MYJD_PASSWORD">My.JDownloader password · blank keeps saved value</label><input id="cfg_MYJD_PASSWORD" type="password" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_MYJD_DEVICE">Exact JDownloader device name · optional</label><input id="cfg_MYJD_DEVICE" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_API_TOKEN">New access token · blank keeps saved value</label><input id="cfg_API_TOKEN" type="password" autocomplete="off" maxlength="4096"><div class="row"><button id="generateToken" type="button">Generate random token</button><label><input id="showGeneratedToken" type="checkbox"> Show token</label></div><label class="search-label" for="cfg_UPLOAD_DIR">Upload folder on backend machine</label><input id="cfg_UPLOAD_DIR" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_HOST">Backend bind host</label><input id="cfg_HOST" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_PORT">Backend port</label><input id="cfg_PORT" type="number" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_ALLOWED_ORIGINS">Allowed browser origins · comma separated, optional</label><input id="cfg_ALLOWED_ORIGINS" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_SHORTCUT_URL">Published iCloud Shortcut link · optional</label><input id="cfg_SHORTCUT_URL" type="url" autocomplete="off" maxlength="4096"><p class="hint">All changes take effect after restarting the backend. If managed by Docker/systemd environment variables, keep those definitions in sync. Pages origin: https://jr-repos.github.io — only add it if using that frontend. A desktop launch requires an installed app in a standard folder and a logged-in desktop session.</p><button id="saveSettings" type="submit" class="primary">Save on backend PC</button></form><p id="settingsMessage" class="msg" role="status" aria-live="polite"></p></div></dialog>
+<dialog id="settingsDialog" aria-labelledby="settingsTitle"><div class="changes-heading"><h2 id="settingsTitle">Account &amp; server settings</h2><button id="closeSettings" type="button">Close</button></div><div class="settings-scroll"><div class="row controls"><button id="stepButton" type="button">Step by Step</button><button id="testConnection" type="button">Test connection</button><button id="logsButton" type="button">Logs</button></div><p id="connectionTestResult" class="hint" role="status"></p><section id="browserConnection"><h3>Browser connection</h3>
+      <p class="hint">Save the app's access token on this browser to connect. Account and server fields are below.</p>
+      <label class="search-label" for="backendUrl">Backend address <span class="optional">blank = this server</span></label><div class="row"><input id="backendUrl" type="url" placeholder="https://your-pc.example"><button id="saveBackend" type="button">Save address</button></div><p class="hint">GitHub Pages needs your running PC’s HTTPS backend address. Only enter a backend you trust with your token. Allow this page’s origin in backend Settings.</p><label class="search-label" for="token">Access token</label>
+      <div class="row"><input type="password" id="token" placeholder="API token" autocomplete="off"><button id="saveTok" type="button">Save</button></div>
+    </section><h3>Account & server</h3><p class="hint">Saved privately on the backend machine between sessions. Your My.JDownloader password is not stored in browser storage or uploaded to GitHub. The .env file is plaintext protected by that machine’s permissions.</p><form id="settingsForm"><label class="search-label" for="cfg_MYJD_EMAIL">My.JDownloader email</label><input id="cfg_MYJD_EMAIL" type="email" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_MYJD_PASSWORD">My.JDownloader password</label><input id="cfg_MYJD_PASSWORD" type="password" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_MYJD_DEVICE">Exact JDownloader device name · optional</label><input id="cfg_MYJD_DEVICE" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_API_TOKEN">Backend access token</label><input id="cfg_API_TOKEN" type="password" autocomplete="off" maxlength="4096"><label class="download-choice"><input id="showPassword" type="checkbox">Show password</label><div class="row"><button id="generateToken" type="button">Generate random token</button><label><input id="showGeneratedToken" type="checkbox"> Show token</label></div><label class="search-label" for="cfg_UPLOAD_DIR">Upload folder on backend machine</label><input id="cfg_UPLOAD_DIR" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_HOST">Backend bind host</label><input id="cfg_HOST" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_PORT">Backend port</label><input id="cfg_PORT" type="number" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_ALLOWED_ORIGINS">Allowed browser origins · comma separated, optional</label><input id="cfg_ALLOWED_ORIGINS" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_SHORTCUT_URL">Published iCloud Shortcut link · optional</label><input id="cfg_SHORTCUT_URL" type="url" autocomplete="off" maxlength="4096"><p class="hint">All changes take effect after restarting the backend. If managed by Docker/systemd environment variables, keep those definitions in sync. Pages origin: https://jr-repos.github.io — only add it if using that frontend. A desktop launch requires an installed app in a standard folder and a logged-in desktop session.</p><button id="saveSettings" type="submit" class="primary">Save on backend PC</button></form><p id="settingsMessage" class="msg" role="status" aria-live="polite"></p></div></dialog>
+<dialog id="downloadDialog" class="utility-dialog" aria-labelledby="downloadTitle"><div class="changes-heading"><h2 id="downloadTitle">Downloads</h2><button type="button" id="closeDownload">Close</button></div><div class="dialog-body"><h3>JDownloader Desktop</h3><label for="desktopOS" class="sr-only">Desktop operating system</label><select id="desktopOS"><option value="choose">Choose PC OS</option><option>Windows</option><option>macOS</option><option>Linux</option></select><a id="downloadDesktop" href="https://jdownloader.org/jdownloader2" target="_blank" rel="noopener noreferrer">Download JDownloader Desktop</a><p id="desktopDownloadHint" class="hint"></p><p class="hint">This opens the official download page for your chosen PC operating system.</p><h3>JD Share</h3><p><a href="https://github.com/JR-REPOS/jd-share/actions" target="_blank" rel="noopener noreferrer">Versioned app ZIPs · private GitHub Actions</a></p><p class="hint">Sign into the private repository to download a successful release artifact.</p></div></dialog><dialog id="siriDialog" class="utility-dialog" aria-labelledby="siriTitle"><div class="changes-heading"><h2 id="siriTitle">Siri-Shortcut</h2><button type="button" id="closeSiri">Close</button></div><div class="dialog-body"><p class="hint">A Shortcut can open shared links here for review, using this browser’s saved token and selected PC. Nothing is submitted or downloaded automatically.</p><button id="installShortcut" type="button">Install Siri Shortcut</button> <a id="shortcutInstallLink" hidden target="_blank" rel="noopener noreferrer">Open Shortcut setup</a><p id="shortcutMessage" role="status" class="hint"></p><a href="sharing.html">Shortcut setup and versioned downloads</a></div></dialog><dialog id="historyDialog" class="utility-dialog" aria-labelledby="historyTitle"><div class="changes-heading"><h2 id="historyTitle">History & statistics</h2><button type="button" id="closeHistory">Close</button></div><div class="dialog-body"><p class="hint">Server activity is shared across browsers for the selected PC. Submitted links are recorded as accepted or uncertain; only JDownloader’s finished flag counts as a completion. Recording continues while the server runs. No older history can be reconstructed.</p><button id="refreshHistory" type="button">Refresh history</button><button id="statisticsButton" type="button">Statistics</button><p id="serverHistoryMessage" role="status" class="hint"></p><ul id="serverHistoryList"></ul><div class="row"><button id="historyPrev" type="button">Newer</button><button id="historyNext" type="button">Older</button></div><details><summary>Browser notifications & legacy local history</summary>
+    <label class="download-choice"><input type="checkbox" id="recordHistory">Record completed files on this browser</label>
+    <p class="hint">Opt-in history keeps up to 200 completions observed while this page is open. It does not reconstruct older downloads or prove a missing file finished. Times show when completion was first observed (UTC). Filenames remain on this browser. Saving a connection token clears this history.</p>
+    <button id="enableNotifications" type="button">Enable completion notifications</button><p id="notificationHelp" class="hint"></p>
+    <p id="activityMessage" class="msg" role="status"></p>
+    <ul id="historyList" aria-label="Download history"></ul><button id="clearHistory" type="button">Clear history</button>
+  </details></div></dialog><dialog id="statisticsDialog" class="utility-dialog" aria-labelledby="statisticsTitle"><div class="changes-heading"><h2 id="statisticsTitle">Download statistics</h2><button type="button" id="closeStatistics">Close</button></div><div class="dialog-body"><p id="statsScope" class="hint"></p><dl id="statisticsGrid" class="statistics-grid"></dl><h3>File types</h3><ul id="fileTypes"></ul><p class="hint">All-time means since recording started on this backend. Active time and speed are sampled every five seconds while the server runs; outages and shutdowns are excluded. Quickest is shown only when the full transfer was observed from zero bytes. Pre-existing finished files count once, with unknown duration.</p></div></dialog><dialog id="logsDialog" class="utility-dialog" aria-labelledby="logsTitle"><div class="changes-heading"><h2 id="logsTitle">System logs</h2><button type="button" id="closeLogs">Close</button></div><div class="dialog-body"><label class="download-choice"><input id="recordLogs" type="checkbox">Record system logs (off by default)</label><p class="hint">Records HTTP method, route template, response status and monitor failures only. No passwords, access tokens, link URLs, request bodies or raw errors. Keeps the latest 500 entries on this server; the preference survives restart.</p><div class="row controls"><button id="refreshLogs" type="button">Refresh</button><button id="exportLogs" type="button">Download logs</button><button id="clearLogs" type="button">Clear logs</button></div><p id="logsMessage" class="hint" role="status"></p><pre id="systemLogs" tabindex="0"></pre></div></dialog><dialog id="stepDialog" class="utility-dialog" aria-labelledby="stepTitle"><div class="changes-heading"><h2 id="stepTitle">Step by Step setup</h2><button type="button" id="closeStep">Close</button></div><div class="dialog-body"><ol class="setup-steps"><li><strong>Run JD Share on your PC.</strong> Copy <code>.env.example</code> to <code>.env</code>, set an API token and start <code>python app.py</code>. Keep this PC running.</li><li><strong>Get your My.JDownloader login.</strong> Register or sign in at <a href="https://my.jdownloader.org/" target="_blank" rel="noopener noreferrer">my.jdownloader.org</a>. Example email: <code>name@example.com</code>. Use that account’s password.</li><li><strong>Connect desktop JDownloader.</strong> Open Settings → My.JDownloader in the desktop app and enter the same login. Copy the exact device name shown there, e.g. <code>JDownloader@Home-PC</code>. Blank selects the first device.</li><li><strong>Connect this browser.</strong> In Settings, enter the backend address (e.g. <code>http://localhost:8787</code> on the same PC, or your trusted HTTPS tunnel URL from another device). Copy API_TOKEN from the backend .env into Access token, then Save connection. Pages needs HTTPS and the allowed origin <code>https://jr-repos.github.io</code>.</li><li><strong>Generate a token if needed.</strong> Use Generate random token. Save on backend PC, restart the backend, then save that new token in the browser connection. This token belongs to JD Share, not My.JDownloader.</li><li><strong>Set server details.</strong> Example upload folder: <code>./uploads</code> on the backend. Bind host <code>0.0.0.0</code> listens on the network; <code>127.0.0.1</code> is local only. Example port: <code>8787</code>. These are not your public HTTPS URL.</li><li><strong>Optional Siri Shortcut.</strong> Open Siri-Shortcut for the setup guide. A published iCloud link looks like <code>https://www.icloud.com/shortcuts/…</code>. No account password is needed in the Shortcut.</li><li><strong>Save, restart, test.</strong> Save account/server details, restart JD Share, reopen Settings and use Test connection. Check backend, account and selected PC results separately.</li></ol></div></dialog>
 </main>
 
 <script src="connection.js"></script>
@@ -144,6 +148,7 @@
 <script src="activity.js"></script>
 <script src="advanced.js"></script>
 <script src="releases.js"></script>
+<script src="hub.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const connection=Connection.create({storage:localStorage,location:typeof location!=='undefined'?location:null});
@@ -159,10 +164,10 @@ async function api(path, opts={}) {
   const mutation = opts.method && opts.method !== 'GET';
   if(mutation)deviceMutations++;
   try {
-    if(connection.needsBackend())throw new Error("Set your PC backend address in Connection settings first.");
+    if(connection.needsBackend())throw new Error("Set your PC backend address in Settings first.");
     const r = await fetch(connection.url(path), {...opts, headers: {"X-JD-Device": device, "X-Token": tok(), "Content-Type": "application/json", ...(opts.headers||{})}});
     if (device !== selectedDevice()) throw new Error('Device changed. Refresh before continuing.');
-    if (r.status === 401) { const error = new Error("Wrong or missing token. Open Connection settings below."); error.status = 401; throw error; }
+    if (r.status === 401) { const error = new Error("Wrong or missing token. Open Settings."); error.status = 401; throw error; }
     if (!r.ok) throw new Error((await r.json().catch(()=>({}))).detail || r.statusText);
     return r.json();
   } finally {if(mutation)deviceMutations--;}
@@ -171,6 +176,7 @@ async function api(path, opts={}) {
 async function add(autostart) {
   const links = $("links").value.trim();
   if (!links) return msg("Paste a link first.", "err");
+  if (!await hub.checkDuplicates(links)) return;
   msg("Sending…");
   try {
     const r = await api("/api/add", {method:"POST", body: JSON.stringify({links, package: $("pkg").value || null, destination:$("destination").value.trim() || null, autostart})});
@@ -225,6 +231,7 @@ $("add").onclick = async () => {
   const links = $("links").value.trim();
   if (!links) return msg("Paste a link first.", "err");
   if (reviewToken) return msg("Finish or close the current review first.", "err");
+  if (!await hub.checkDuplicates(links)) return;
   $("add").disabled = true; $("addOnly").disabled = true;
   msg("Sending to LinkGrabber for review…");
   try {
@@ -271,23 +278,23 @@ $("file").onchange = () => {
 };
 $("up").onclick = async () => {
   const f = $("file").files[0]; if (!f || $("up").disabled) return;
-  if(connection.needsBackend())return showUpload("Set your PC backend address in Connection settings first.",true);
+  if(connection.needsBackend())return showUpload("Set your PC backend address in Settings first.",true);
   const fd = new FormData(); fd.append("file", f);
   $("up").disabled = true; $("file").disabled = true; $("up").textContent="Uploading…"; showUpload("Uploading file…");
   try {
     const r = await fetch(connection.url("/api/upload"), {method:"POST", headers:{"X-Token": tok()}, body: fd});
-    if (!r.ok) throw new Error(r.status === 401 ? "Check the access token in Connection settings." : "Upload failed (" + r.status + "). Try again.");
+    if (!r.ok) throw new Error(r.status === 401 ? "Check the access token in Settings." : "Upload failed (" + r.status + "). Try again.");
     showUpload("Saved on the PC."); $("file").value=""; $("fileName").textContent="No file selected";
   } catch(e) { showUpload(e.message,true); }
   finally { $("file").disabled=false; $("up").disabled=!$("file").files.length; $("up").textContent="Upload to PC"; }
 };
 
-$("saveTok").onclick = () => { localStorage.setItem("jd_token", $("token").value.trim()); $("token").value=""; msg("Token saved.", "ok"); fileTools.reset(); activityView.reset();
+$("saveTok").onclick = () => { localStorage.setItem("jd_token", $("token").value.trim()); msg("Token saved.", "ok"); fileTools.reset(); activityView.reset();
   if(typeof localStorage.key === 'function') {
     for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key?.startsWith('jd_activity_history') || key?.startsWith('jd_history_enabled'))localStorage.removeItem(key);}
   }
   selectedDownloads.clear(); $("bulkMessage").textContent=""; refresh(); pendingView.reset(); pendingView.refreshIfVisible(); };
-if (!tok()) $("connectionSettings").open = true;
+$("token").value=tok();
 $('backendUrl').value=connection.base();
 $('saveBackend').onclick=()=>{
   if(deviceMutations||reviewBusy||bulkBusy||fileTools.busy())return msg('Wait for the current operation before changing backend.','err');
@@ -332,7 +339,7 @@ async function refresh() {
   if (!tok()) {
     $("state").textContent = "Token required";
     $("speed").textContent = "— B/s";
-    $("connection").textContent = "Open Connection settings below to connect.";
+    $("connection").textContent = "Open Settings to connect.";
     $("downloadSummary").textContent = "Save the access token to load downloads.";
     $("list").replaceChildren(); lastStatus = null; lastSuccess = 0; selectedDownloads.clear(); fileTools.reset();
     return;
@@ -389,7 +396,7 @@ function renderDownloads(stale = lastAttemptFailed || Date.now()-lastSuccess >= 
   for (const id of selectedDownloads) if (!selectable.has(id)) selectedDownloads.delete(id);
   const filter=$("downloadFilter").value || 'all';
   const grouped=$("downloadGrouping").value === 'packages';
-  const links=DownloadView.select(lastStatus.links,lastStatus.state,search,filter);
+  const links=DownloadView.sort(DownloadView.select(lastStatus.links,lastStatus.state,search,filter),lastStatus.state,$("downloadSort").value);
   $("downloadMatches").textContent=(search || filter !== 'all') ? `${links.length} of ${lastStatus.links.length} files match` : '';
   $("packageButtons").hidden=!grouped;
   DownloadView.render($("list"),links,lastStatus.state,stale,{
@@ -430,6 +437,8 @@ const activityView=ActivityView.create({document,storage:localStorage,scope:sele
 const fileTools=FileTools.create({document,api,tok:contextKey,onChanged:()=>refresh()});
 $("downloadSearch").oninput=()=>renderDownloads();
 $("downloadFilter").onchange=()=>renderDownloads();
+$("downloadSort").value=localStorage.getItem("jd_sort")||"queue";
+$("downloadSort").onchange=()=>{localStorage.setItem("jd_sort",$("downloadSort").value);renderDownloads();};
 $("downloadGrouping").onchange=()=>renderDownloads();
 $("expandPackages").onclick=()=>{collapsedPackages.clear();renderDownloads();};
 $("collapsePackages").onclick=()=>{
@@ -445,6 +454,10 @@ const releaseView=ReleaseView.create({document,load:async()=>{
 const advancedView=AdvancedView.create({document,api,storage:localStorage,device:selectedDevice,
   canSwitch:()=>!reviewBusy && !bulkBusy && !fileTools.busy() && deviceMutations===0,onSwitch:()=>location.reload()});
 SettingsView.create({document,api,crypto:typeof crypto!=='undefined'?crypto:null,navigator:typeof navigator!=='undefined'?navigator:{}});
+const hub=Hub.create({document,api,storage:localStorage,connection,device:selectedDevice,
+  actualDevice:()=>lastStatus?.deviceId || selectedDevice(),
+  canSwitch:()=>!reviewBusy && !bulkBusy && !fileTools.busy() && deviceMutations===0,
+  confirm:message=>window.confirm(message)});
 advancedView.devices();
 if(typeof location !== 'undefined') {
   const shared=AdvancedView.sharedLinks(location.hash);

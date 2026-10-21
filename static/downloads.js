@@ -63,6 +63,13 @@ const DownloadView = (() => {
     return links.filter(link => String(link.name || '').toLocaleLowerCase().includes(term)
       && (filter === 'all' || category(link, state) === filter));
   }
+  function sort(links, state, key='queue') {
+    const knownFirst=(a,b)=>a===null ? (b===null?0:1) : b===null ? -1 : b-a;
+    return [...links].sort((a,b)=>key==='name' ? String(a.name||'').localeCompare(String(b.name||''))
+      : key==='size' ? knownFirst(number(a.bytesTotal),number(b.bytesTotal))
+      : key==='progress' ? knownFirst(describe(a,state).pct,describe(b,state).pct)
+      : key==='status' ? describe(a,state).label.localeCompare(describe(b,state).label) : 0);
+  }
   function groups(links, packages = []) {
     const names = new Map(packages.map(p => [String(p.uuid), p.name || 'Unnamed package']));
     const result = new Map();
@@ -156,6 +163,6 @@ const DownloadView = (() => {
     }
     refocus?.focus();
   }
-  return {number, size, eta, controllerLabel, describe, category, select, groups, render};
+  return {sort,number, size, eta, controllerLabel, describe, category, select, groups, render};
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = DownloadView;

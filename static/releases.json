@@ -1,6 +1,19 @@
 {
-  "version": "1.1.4",
+  "version": "1.2.0",
   "releases": [
+    {
+      "version": "1.2.0",
+      "timestamp": "2026-10-21T18:44:26+01:00",
+      "title": "Utility hub, persistent setup and server insights",
+      "changes": [
+        "Center Changes, Download, Open JDownloader App, Siri-Shortcut and History controls; show social logo images beside a larger brand and version.",
+        "Keep all connection controls in Settings, reload saved masked/revealable values, add input help, Step by Step guidance and layered connection testing.",
+        "Save browser-local download presets, warn about recorded or pending duplicate links, show backend upload-disk space and sort downloads.",
+        "Persist per-device server link/completion history and observed download statistics; keep unknown metrics explicit.",
+        "Add opt-in persistent system logs with viewer, JSON download and clear controls; recording starts disabled.",
+        "Document pending work and 50 potential future features; retain all earlier release notes."
+      ]
+    },
     {
       "version": "1.1.4",
       "timestamp": "2026-10-21T17:55:20+01:00",

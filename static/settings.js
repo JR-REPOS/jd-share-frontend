@@ -5,19 +5,21 @@
     const setMessage=text=>message.textContent=text;
     $('settingsToggle').onclick=async()=>{
       dialog.showModal();setMessage('Loading saved backend settings…');$('saveSettings').disabled=true;
-      fields.forEach(k=>$('cfg_'+k).value='');
+      $('backendUrl').value=root.localStorage?.getItem('jd_backend')||$('backendUrl').value;
+      $('token').value=root.localStorage?.getItem('jd_token')||$('token').value;
       try {
-        const r=await api('/api/settings',{cache:'no-store'});
-        fields.forEach(k=>{if(!['MYJD_PASSWORD','API_TOKEN'].includes(k))$('cfg_'+k).value=r.values[k]||({HOST:'0.0.0.0',PORT:'8787',UPLOAD_DIR:'./uploads'}[k]||'');});
+        const r=await api('/api/settings?includeSecrets=true',{cache:'no-store'});
+        fields.forEach(k=>{$('cfg_'+k).value=r.values[k]||({HOST:'0.0.0.0',PORT:'8787',UPLOAD_DIR:'./uploads'}[k]||'');});
         $('cfg_MYJD_PASSWORD').placeholder=r.passwordSet?'Saved; leave blank to keep':'Enter password';
         $('cfg_API_TOKEN').placeholder=r.tokenSet?'Saved; leave blank to keep':'Generate a token';
         $('saveSettings').disabled=false;
-        setMessage('Saved on the backend machine in its private .env. Password and token are never read back. Restart that backend after saving.');
-      }catch(e){setMessage(e.message+' Save the backend address and access token in Connection settings first.');}
+        setMessage('Saved values loaded from the backend. Secrets stay masked unless revealed. Restart the backend after saving changes.');
+      }catch(e){setMessage(e.message+' Save your browser connection above first, then reopen Settings to load the backend fields.');}
     };
     $('closeSettings').onclick=()=>dialog.close();
-    dialog.onclose=()=>{['MYJD_PASSWORD','API_TOKEN'].forEach(k=>$('cfg_'+k).value='');$('settingsToggle').focus();};
+    dialog.onclose=()=>{['MYJD_PASSWORD','API_TOKEN'].forEach(k=>{$('cfg_'+k).value='';$('cfg_'+k).type='password';});$('showPassword').checked=false;$('showGeneratedToken').checked=false;$('settingsToggle').focus();};
     $('generateToken').onclick=()=>{try{$('cfg_API_TOKEN').value=root.Connection.generate(crypto);setMessage('New random token generated. Copy it before closing; it becomes active after saving and restarting the backend.');}catch(e){setMessage(e.message);}};
+    $('showPassword').onchange=()=>{$('cfg_MYJD_PASSWORD').type=$('showPassword').checked?'text':'password';};
     $('showGeneratedToken').onchange=()=>{$('cfg_API_TOKEN').type=$('showGeneratedToken').checked?'text':'password';};
     $('settingsForm').onsubmit=async event=>{
       event.preventDefault();if($('saveSettings').disabled)return;
@@ -25,8 +27,7 @@
       $('saveSettings').disabled=true;
       try{await api('/api/settings',{method:'POST',body:JSON.stringify(values)});
         if(values.API_TOKEN)$('token').value=values.API_TOKEN;
-        $('cfg_MYJD_PASSWORD').value='';
-        setMessage('Saved. Restart the JD Share backend to apply changes. If you changed the token, it is filled in Connection settings: click Save there after restarting. Host/port changes may change your backend address.');
+        setMessage('Saved. Restart the JD Share backend to apply changes. If you changed the token, it is filled in Browser connection: click Save after restarting. Host/port changes may change your backend address.');
       }catch(e){setMessage(e.message);}finally{$('saveSettings').disabled=false;}
     };
     $('openDesktop').onclick=async()=>{
