@@ -1,0 +1,8 @@
+{
+  "name": "JD Share",
+  "short_name": "JD Share",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#12161b",
+  "theme_color": "#12161b"
+}

@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JD Share">
+<meta name="theme-color" content="#12161b">
+<link rel="manifest" href="manifest.json">
+<title>JD Share</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <header class="app-header"><div class="brand"><span class="brand-mark" aria-hidden="true">↓</span><div><p class="eyebrow">PHONE TO PC</p><h1>JD Share</h1></div></div><button id="settingsToggle" type="button" class="quiet">Settings</button></header>
+  <p class="intro">Your downloads, in reach.</p>
+  <details class="device-panel"><summary>JDownloader PC</summary><label class="search-label" for="devicePicker">Send commands to</label><div class="row"><select id="devicePicker"><option value="">Configured default PC</option></select><button id="refreshDevices" type="button">Refresh PCs</button></div><p id="deviceMessage" class="hint" role="status"></p></details>
+
+  <div class="bar">
+    <span class="speed" id="speed">— B/s</span>
+    <span class="state" id="state" role="status">Connecting…</span>
+  </div>
+
+  <p class="connection" id="connection">Checking connection…</p>
+
+  <section class="composer" aria-labelledby="addTitle"><h2 id="addTitle">Add a link</h2>
+  <label class="sr-only" for="links">Links to send to JDownloader</label>
+  <textarea id="links" placeholder="Paste one or more links" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+  <details class="package-options"><summary>Package name <span class="optional">optional</span></summary><label class="sr-only" for="pkg">Package name</label><div class="row"><input type="text" id="pkg" placeholder="Group these files into a package"></div></details>
+  <details class="package-options"><summary>Download folder <span class="optional">optional</span></summary><label class="search-label" for="destination">Folder on the JDownloader PC</label><input type="text" id="destination" placeholder="Leave blank for JDownloader’s default" autocomplete="off"><p class="hint">Applies to new links only. Enter a path on the PC running JDownloader. Existing files are not moved; JDownloader’s package rules still apply.</p></details>
+  <div class="row">
+    <button class="primary" id="add">Find files</button>
+    <button id="addOnly">Add only</button>
+  </div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </section>
+  <section class="review" id="review" hidden aria-labelledby="reviewTitle">
+    <h2 id="reviewTitle" style="margin-top:0">Choose what to download</h2>
+    <p class="hint">Select the main video by filename and size. Nothing is selected automatically.</p>
+    <p id="scanState" role="status" class="hint"></p>
+    <ul id="candidates"></ul>
+    <div class="row"><button id="scanRefresh">Refresh files</button><button id="closeReview">Close</button></div>
+    <button class="primary" id="downloadSelected" disabled>Download selected</button>
+    <p class="hint">Unselected files stay in LinkGrabber. Starting downloads also resumes any other enabled files already queued on the PC.</p>
+  </section>
+
+  <details class="global-controls"><summary>Control all downloads</summary><p class="hint">These controls apply to the whole JDownloader queue.</p><div class="row controls">
+    <button data-act="start">Start</button>
+    <button data-act="pause">Pause</button>
+    <button data-act="resume">Resume</button>
+    <button data-act="stop">Stop</button>
+  </div></details>
+
+  <div class="tabs" role="tablist" aria-label="File lists">
+    <button id="downloadsTab" type="button" role="tab" aria-selected="true" aria-controls="downloadsPanel" tabindex="0">Downloads</button>
+    <button id="linkgrabberTab" type="button" role="tab" aria-selected="false" aria-controls="linkgrabberPanel" tabindex="-1">LinkGrabber</button>
+  </div>
+  <section id="downloadsPanel" role="tabpanel" aria-labelledby="downloadsTab">
+    <div class="downloads-heading"><h2>Downloads</h2><button id="refreshStatus" type="button">Refresh</button></div>
+    <p id="downloadSummary">Waiting for download status…</p>
+    <label class="sr-only" for="downloadSearch">Search download filenames</label>
+    <input id="downloadSearch" type="search" placeholder="Search downloads…" autocomplete="off">
+    <div class="download-filters">
+      <label for="downloadFilter">Show status<select id="downloadFilter"><option value="all">All files</option><option value="active">Downloading</option><option value="queued">Queued</option><option value="paused">Paused</option><option value="finished">Finished</option><option value="attention">Needs attention</option><option value="disabled">Disabled</option><option value="skipped">Skipped</option></select></label>
+      <label for="downloadGrouping">View<select id="downloadGrouping"><option value="files">Files</option><option value="packages">Packages</option></select></label>
+    </div>
+    <div class="row" id="packageButtons" hidden><button id="expandPackages" type="button">Expand all</button><button id="collapsePackages" type="button">Collapse all</button></div>
+    <p id="downloadMatches" class="hint" role="status"></p>
+    <details class="bulk-controls"><summary>Selected-file actions <span id="bulkCount">0 selected</span></summary>
+      <p class="hint">Select unfinished files below (up to 100). Selection includes files hidden by search, filters or collapsed packages. These actions change selected files only and do not start the controller.</p>
+      <p id="bulkSummary" class="hint" role="status"></p>
+      <div class="row controls"><button id="clearDownloads" type="button" disabled>Clear selection</button><button id="bulkEnable" type="button" disabled>Enable selected</button><button id="bulkDisable" type="button" disabled>Disable selected</button></div>
+      <label class="search-label" for="bulkPriority">Priority for selected files</label><div class="row priority-row"><select id="bulkPriority"><option value="">Choose priority…</option><option value="HIGHEST">Highest</option><option value="HIGHER">Higher</option><option value="HIGH">High</option><option value="DEFAULT">Normal</option><option value="LOW">Low</option><option value="LOWER">Lower</option><option value="LOWEST">Lowest</option></select><button id="bulkApply" type="button" disabled>Apply priority</button></div>
+      <p class="hint">Normal and Low priority readback is under investigation. Refresh and compare with the PC after a change.</p>
+      <p class="msg" id="bulkMessage" role="status"></p>
+    </details>
+    <section id="fileControls" class="file-editor" aria-labelledby="managedName" hidden>
+      <div class="editor-heading"><h3 id="managedName">Manage file</h3><button id="closeFileControls" class="quiet" type="button">Close</button></div>
+      <p id="fileCurrent" class="hint"></p>
+      <div class="row controls"><button id="fileEnabled" type="button">Disable file</button><button id="fileRetry" type="button">Retry file (resume)</button></div>
+      <p class="hint">Retry sends a resume request for this unfinished, non-running file. It does not send Reset, delete data or start the global controller. JDownloader still decides whether the host/file can resume; check the PC after an uncertain result.</p>
+      <p id="fileEnabledHelp" class="hint">Enable makes this file eligible to run when the controller is running. Disable takes it out of scheduling; an active transfer may take a moment to stop.</p>
+      <label class="search-label" for="filePriority">Download priority</label>
+      <div class="row priority-row"><select id="filePriority"><option value="">Choose priority…</option><option value="HIGHEST">Highest</option><option value="HIGHER">Higher</option><option value="HIGH">High</option><option value="DEFAULT">Normal</option><option value="LOW">Low</option><option value="LOWER">Lower</option><option value="LOWEST">Lowest</option></select><button id="applyPriority" type="button">Apply priority</button></div>
+      <p class="hint">Priority influences scheduling. Availability, host limits and running transfers still affect what starts next.</p>
+      <p id="fileActionMessage" class="msg" role="status" aria-live="polite"></p>
+    </section>
+    <ul id="list" aria-label="Downloads"><li class="empty">Connecting to JDownloader…</li></ul>
+  </section>
+  <section id="linkgrabberPanel" role="tabpanel" aria-labelledby="linkgrabberTab" hidden>
+    <div class="downloads-heading"><h2>Pending files</h2><button id="refreshPending" type="button">Refresh files</button></div>
+    <p class="hint">All files waiting in JDownloader's LinkGrabber, including Add only and unselected review results.</p>
+    <label class="search-label" for="pendingSearch">Search pending filenames</label>
+    <input id="pendingSearch" type="search" placeholder="Search filenames…" autocomplete="off">
+    <p class="hint" id="pendingSummary" role="status">Open LinkGrabber to load pending files.</p>
+    <p class="msg" id="pendingMessage" role="status" aria-live="polite"></p>
+    <ul id="pendingList" aria-label="Pending files"></ul>
+    <div class="row"><button id="clearPending" type="button" disabled>Clear selection</button><button id="downloadPending" type="button" class="primary" disabled>Download selected (0)</button></div>
+    <p class="hint">Selections stay selected when searching. The count includes hidden selections. Starting downloads also starts other enabled files already queued on the PC. Offline or disabled files cannot be selected.</p>
+  </section>
+
+  <details class="advanced-panel"><summary>Speed limit and scheduling</summary>
+    <h2>Speed limit for this PC</h2><p class="hint">Applies to the whole selected JDownloader queue. Refresh reads the supported settings before Apply becomes available. Disable leaves the saved rate unchanged.</p>
+    <button id="refreshSpeed" type="button">Refresh speed settings</button>
+    <label class="download-choice"><input id="speedEnabled" type="checkbox">Enable speed limit</label><label class="search-label" for="speedLimit">Limit (KiB/s)</label><input id="speedLimit" type="number" min="1" max="2097151" step="1" value="1024"><button id="applySpeed" type="button" disabled>Apply speed limit</button><p id="speedMessage" class="msg" role="status"></p>
+    <h2>One-time controller schedule</h2><p class="hint">Applies to the whole selected PC queue, including existing enabled files. Times use this browser’s local timezone and are stored as UTC. The app server must stay running; closing this page is fine. Missed jobs after a server outage are skipped. Uncertain commands are not replayed. Pending jobs survive restart. Use one server process.</p>
+    <label class="search-label" for="scheduleAction">Controller action</label><select id="scheduleAction"><option value="stop">Stop all downloads</option><option value="start">Start enabled downloads</option><option value="pause">Pause all downloads</option><option value="resume">Resume all downloads</option></select>
+    <label class="search-label" for="scheduleTime">Date and time on this device</label><input id="scheduleTime" type="datetime-local"><div class="row"><button id="saveSchedule" type="button">Save schedule</button><button id="refreshSchedules" type="button">Refresh schedules</button></div><p id="scheduleMessage" class="msg" role="status"></p><ul id="scheduleList" aria-label="Controller schedules"></ul>
+  </details>
+  <details class="sharing-panel"><summary>Share links from iPhone</summary><p class="hint">A Shortcut can open shared links here for review, using this browser’s saved token and selected PC. Nothing is submitted or downloaded automatically.</p><button id="installShortcut" type="button">Install Siri Shortcut</button> <a id="shortcutInstallLink" hidden target="_blank" rel="noopener noreferrer">Open Shortcut setup</a><p id="shortcutMessage" role="status" class="hint"></p><a href="sharing.html">Shortcut setup and versioned downloads</a></details>
+  <details class="activity-panel"><summary>History and notifications</summary>
+    <label class="download-choice"><input type="checkbox" id="recordHistory">Record completed files on this browser</label>
+    <p class="hint">Opt-in history keeps up to 200 completions observed while this page is open. It does not reconstruct older downloads or prove a missing file finished. Times show when completion was first observed (UTC). Filenames remain on this browser. Saving a connection token clears this history.</p>
+    <button id="enableNotifications" type="button">Enable completion notifications</button><p id="notificationHelp" class="hint"></p>
+    <p id="activityMessage" class="msg" role="status"></p>
+    <ul id="historyList" aria-label="Download history"></ul><button id="clearHistory" type="button">Clear history</button>
+  </details>
+  <div class="utilities">
+    <details id="transferDetails"><summary>Send a file to your PC</summary>
+      <p class="hint">Upload to the server hosting JD Share. Changing the JDownloader PC above does not redirect these uploads.</p>
+      <input type="file" id="file" class="sr-only">
+      <label for="file" class="file-picker"><span class="file-icon" aria-hidden="true">↑</span><span><strong>Choose a file</strong><span id="fileName" class="file-name">No file selected</span></span></label>
+      <button id="up" type="button" class="primary upload-button" disabled>Upload to PC</button>
+      <p id="uploadMessage" class="msg" role="status" aria-live="polite"></p>
+    </details>
+    <details id="connectionSettings"><summary>Connection settings</summary>
+      <p class="hint">Save the app's access token on this browser to connect. Use Settings above to edit the backend’s account and server configuration.</p>
+      <label class="search-label" for="backendUrl">Backend address <span class="optional">blank = this server</span></label><div class="row"><input id="backendUrl" type="url" placeholder="https://your-pc.example"><button id="saveBackend" type="button">Save address</button></div><p class="hint">GitHub Pages needs your running PC’s HTTPS backend address. Only enter a backend you trust with your token. Allow this page’s origin in backend Settings.</p><label class="search-label" for="token">Access token</label>
+      <div class="row"><input type="password" id="token" placeholder="API token" autocomplete="off"><button id="saveTok" type="button">Save</button></div>
+    </details>
+  </div>
+  <section class="desktop-panel"><button id="openDesktop" type="button">Open JDownloader App</button><p class="hint">Opens JDownloader on the machine running the JD Share backend, using its desktop session. It does not open a program on this phone or a different selected PC.</p><p id="desktopMessage" class="msg" role="status"></p></section>
+  <footer><div>JD Share · <span id="appVersion">Loading version…</span></div><button id="changesButton" type="button" class="quiet">Changes</button><div class="desktop-download"><label for="desktopOS" class="sr-only">Desktop operating system</label><select id="desktopOS"><option value="choose">Choose PC OS</option><option>Windows</option><option>macOS</option><option>Linux</option></select><a id="downloadDesktop" href="https://jdownloader.org/jdownloader2" target="_blank" rel="noopener noreferrer">Download JDownloader Desktop</a><p id="desktopDownloadHint" class="hint"></p></div><div class="creator-credit"><p>Created by <strong>Jamie Reddin</strong></p><nav class="social-links" aria-label="Jamie Reddin social accounts"><a class="social-button" href="https://jayreddin.github.io" target="_blank" rel="noopener noreferrer">GitHub</a><a class="social-button" href="https://discord.com/users/210066853354143744" target="_blank" rel="noopener noreferrer">Discord</a><a class="social-button" href="https://x.com/jayreddin" target="_blank" rel="noopener noreferrer">X</a><a class="social-button" href="https://www.reddit.com/u/Jayreddin" target="_blank" rel="noopener noreferrer">Reddit</a></nav></div></footer>
+  <dialog id="changesDialog" aria-labelledby="changesTitle"><div class="changes-heading"><h2 id="changesTitle">What’s new</h2><button id="closeChanges" type="button" class="quiet" aria-label="Close changes">Close</button></div><p id="changesMessage" class="hint" role="status"></p><ol id="changesList" aria-label="Release history" tabindex="0"></ol></dialog>
+
+<dialog id="settingsDialog" aria-labelledby="settingsTitle"><div class="changes-heading"><h2 id="settingsTitle">Account &amp; server settings</h2><button id="closeSettings" type="button">Close</button></div><div class="settings-scroll"><p class="hint">Saved privately on the backend machine between sessions. Your My.JDownloader password is not stored in browser storage or uploaded to GitHub. The .env file is plaintext protected by that machine’s permissions.</p><form id="settingsForm"><label class="search-label" for="cfg_MYJD_EMAIL">My.JDownloader email</label><input id="cfg_MYJD_EMAIL" type="email" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_MYJD_PASSWORD">My.JDownloader password · blank keeps saved value</label><input id="cfg_MYJD_PASSWORD" type="password" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_MYJD_DEVICE">Exact JDownloader device name · optional</label><input id="cfg_MYJD_DEVICE" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_API_TOKEN">New access token · blank keeps saved value</label><input id="cfg_API_TOKEN" type="password" autocomplete="off" maxlength="4096"><div class="row"><button id="generateToken" type="button">Generate random token</button><label><input id="showGeneratedToken" type="checkbox"> Show token</label></div><label class="search-label" for="cfg_UPLOAD_DIR">Upload folder on backend machine</label><input id="cfg_UPLOAD_DIR" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_HOST">Backend bind host</label><input id="cfg_HOST" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_PORT">Backend port</label><input id="cfg_PORT" type="number" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_ALLOWED_ORIGINS">Allowed browser origins · comma separated, optional</label><input id="cfg_ALLOWED_ORIGINS" type="text" autocomplete="off" maxlength="4096"><label class="search-label" for="cfg_SHORTCUT_URL">Published iCloud Shortcut link · optional</label><input id="cfg_SHORTCUT_URL" type="url" autocomplete="off" maxlength="4096"><p class="hint">All changes take effect after restarting the backend. If managed by Docker/systemd environment variables, keep those definitions in sync. Pages origin: https://jr-repos.github.io — only add it if using that frontend. A desktop launch requires an installed app in a standard folder and a logged-in desktop session.</p><button id="saveSettings" type="submit" class="primary">Save on backend PC</button></form><p id="settingsMessage" class="msg" role="status" aria-live="polite"></p></div></dialog>
+</main>
+
+<script src="connection.js"></script>
+<script src="settings.js"></script>
+<script src="downloads.js"></script>
+<script src="pending.js"></script>
+<script src="file-tools.js"></script>
+<script src="activity.js"></script>
+<script src="advanced.js"></script>
+<script src="releases.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const connection=Connection.create({storage:localStorage,location:typeof location!=='undefined'?location:null});
+const tok = () => localStorage.getItem("jd_token") || "";
+const selectedDevice = () => localStorage.getItem('jd_device') || '';
+const contextKey = () => tok() ? connection.base() + '|' + tok() + '|' + selectedDevice() : '';
+const msg = (t, c="") => { $("msg").textContent = t; $("msg").className = "msg " + c; };
+const fmt = n => { if(!n) return "0 B"; const u=["B","KB","MB","GB","TB"]; let i=0; while(n>=1024&&i<4){n/=1024;i++} return n.toFixed(i?1:0)+" "+u[i]; };
+
+let deviceMutations = 0;
+async function api(path, opts={}) {
+  const device = selectedDevice();
+  const mutation = opts.method && opts.method !== 'GET';
+  if(mutation)deviceMutations++;
+  try {
+    if(connection.needsBackend())throw new Error("Set your PC backend address in Connection settings first.");
+    const r = await fetch(connection.url(path), {...opts, headers: {"X-JD-Device": device, "X-Token": tok(), "Content-Type": "application/json", ...(opts.headers||{})}});
+    if (device !== selectedDevice()) throw new Error('Device changed. Refresh before continuing.');
+    if (r.status === 401) { const error = new Error("Wrong or missing token. Open Connection settings below."); error.status = 401; throw error; }
+    if (!r.ok) throw new Error((await r.json().catch(()=>({}))).detail || r.statusText);
+    return r.json();
+  } finally {if(mutation)deviceMutations--;}
+}
+
+async function add(autostart) {
+  const links = $("links").value.trim();
+  if (!links) return msg("Paste a link first.", "err");
+  msg("Sending…");
+  try {
+    const r = await api("/api/add", {method:"POST", body: JSON.stringify({links, package: $("pkg").value || null, destination:$("destination").value.trim() || null, autostart})});
+    $("links").value = ""; msg(`Added ${r.added} link${r.added===1?"":"s"}. Open LinkGrabber to select files.`, "ok"); refresh(); pendingView.refreshIfVisible();
+  } catch(e) { msg(e.message, "err"); }
+}
+let reviewToken = localStorage.getItem("jd_review") || "";
+let chosen = new Set();
+let reviewBusy = false;
+let scanBusy = false;
+let scanReady = false;
+const selectionLabel = () => {
+  $("downloadSelected").disabled = !scanReady || reviewBusy || chosen.size === 0;
+  $("downloadSelected").textContent = `Download selected (${chosen.size})`;
+};
+async function loadReview() {
+  if (!reviewToken || scanBusy || reviewBusy) return;
+  scanBusy = true;
+  const active = reviewToken;
+  try {
+    const r = await api("/api/review/" + active);
+    if (active !== reviewToken) return;
+    scanReady = !r.collecting;
+    $("review").hidden = false;
+    $("scanState").textContent = r.collecting ? "Checking the URL… files may still appear." :
+      r.links.length ? `${r.links.length} files detected. Choose the video you want.` :
+      "No files detected yet. Refresh in a moment; the URL may be unsupported, filtered or already in JDownloader.";
+    const current = new Set(r.links.filter(l => l.availability !== "OFFLINE").map(l => l.id));
+    chosen = new Set([...chosen].filter(id => current.has(id)));
+    const list = $("candidates");
+    // Keep focused checkboxes in place when polling returns unchanged results.
+    const signature = JSON.stringify(r.links);
+    if (list.dataset.signature !== signature) {
+      list.dataset.signature = signature;
+      list.replaceChildren();
+      for (const l of r.links) {
+        const li = document.createElement("li");
+        const label = document.createElement("label"); label.className = "choice";
+        const cb = document.createElement("input"); cb.type = "checkbox";
+        cb.checked = chosen.has(l.id); cb.disabled = l.availability === "OFFLINE";
+        cb.onchange = () => { cb.checked ? chosen.add(l.id) : chosen.delete(l.id); selectionLabel(); };
+        const text = document.createElement("span"); text.textContent = l.name;
+        const meta = document.createElement("small");
+        meta.textContent = `${l.bytesTotal > 0 ? fmt(l.bytesTotal) : "Size unknown"} · ${l.availability}${l.status ? " · " + l.status : ""}`;
+        text.appendChild(meta); label.append(cb, text); li.appendChild(label); list.appendChild(li);
+      }
+    }
+  } catch(e) { scanReady = false; msg(e.message, "err"); }
+  finally { scanBusy = false; selectionLabel(); }
+}
+$("add").onclick = async () => {
+  const links = $("links").value.trim();
+  if (!links) return msg("Paste a link first.", "err");
+  if (reviewToken) return msg("Finish or close the current review first.", "err");
+  $("add").disabled = true; $("addOnly").disabled = true;
+  msg("Sending to LinkGrabber for review…");
+  try {
+    const r = await api("/api/review", {method:"POST", body:JSON.stringify({links, package:$("pkg").value || null, destination:$("destination").value.trim() || null, autostart:false})});
+    reviewToken = r.review; localStorage.setItem("jd_review", reviewToken);
+    chosen.clear(); $("candidates").dataset.signature = "";
+    $("links").value = ""; msg("Links sent. Choose the files below.", "ok");
+    await loadReview();
+  } catch(e) { msg(e.message, "err"); }
+  finally { $("add").disabled = false; $("addOnly").disabled = false; }
+};
+$("scanRefresh").onclick = loadReview;
+$("closeReview").onclick = () => {
+  if (reviewBusy) return;
+  reviewToken = ""; localStorage.removeItem("jd_review"); chosen.clear(); scanReady = false;
+  $("review").hidden = true; $("candidates").replaceChildren(); $("candidates").dataset.signature = "";
+  msg("Review closed. Files remain in LinkGrabber on the PC."); pendingView.refreshIfVisible();
+};
+$("downloadSelected").onclick = async () => {
+  if (reviewBusy || !scanReady || !chosen.size || scanBusy) return;
+  reviewBusy = true; selectionLabel(); $("closeReview").disabled = true;
+  try {
+    const r = await api(`/api/review/${reviewToken}/download`, {method:"POST", body:JSON.stringify({ids:[...chosen]})});
+    reviewToken = ""; localStorage.removeItem("jd_review"); chosen.clear();
+    $("review").hidden = true;
+    msg(`${r.selected} selected file${r.selected===1?"":"s"} sent to Downloads.`, "ok"); refresh();
+  } catch(e) { scanReady = false; msg(e.message, "err"); }
+  finally { reviewBusy = false; $("closeReview").disabled = false; selectionLabel(); }
+};
+if (reviewToken) { $("review").hidden = false; loadReview(); }
+setInterval(loadReview, 4000);
+$("addOnly").onclick = () => add(false);
+
+document.querySelectorAll("[data-act]").forEach(b => b.onclick = async () => {
+  try { await api("/api/control/" + b.dataset.act, {method:"POST"}); msg(b.textContent + " sent.", "ok"); refresh(); }
+  catch(e) { msg(e.message, "err"); }
+});
+
+function showUpload(text, error=false) { $("uploadMessage").textContent=text; $("uploadMessage").className="msg "+(error?"err":"ok"); }
+$("file").onchange = () => {
+  const file = $("file").files[0];
+  $("fileName").textContent = file ? `${file.name} · ${DownloadView.size(file.size)}` : "No file selected";
+  $("up").disabled = !file; showUpload("");
+};
+$("up").onclick = async () => {
+  const f = $("file").files[0]; if (!f || $("up").disabled) return;
+  if(connection.needsBackend())return showUpload("Set your PC backend address in Connection settings first.",true);
+  const fd = new FormData(); fd.append("file", f);
+  $("up").disabled = true; $("file").disabled = true; $("up").textContent="Uploading…"; showUpload("Uploading file…");
+  try {
+    const r = await fetch(connection.url("/api/upload"), {method:"POST", headers:{"X-Token": tok()}, body: fd});
+    if (!r.ok) throw new Error(r.status === 401 ? "Check the access token in Connection settings." : "Upload failed (" + r.status + "). Try again.");
+    showUpload("Saved on the PC."); $("file").value=""; $("fileName").textContent="No file selected";
+  } catch(e) { showUpload(e.message,true); }
+  finally { $("file").disabled=false; $("up").disabled=!$("file").files.length; $("up").textContent="Upload to PC"; }
+};
+
+$("saveTok").onclick = () => { localStorage.setItem("jd_token", $("token").value.trim()); $("token").value=""; msg("Token saved.", "ok"); fileTools.reset(); activityView.reset();
+  if(typeof localStorage.key === 'function') {
+    for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key?.startsWith('jd_activity_history') || key?.startsWith('jd_history_enabled'))localStorage.removeItem(key);}
+  }
+  selectedDownloads.clear(); $("bulkMessage").textContent=""; refresh(); pendingView.reset(); pendingView.refreshIfVisible(); };
+if (!tok()) $("connectionSettings").open = true;
+$('backendUrl').value=connection.base();
+$('saveBackend').onclick=()=>{
+  if(deviceMutations||reviewBusy||bulkBusy||fileTools.busy())return msg('Wait for the current operation before changing backend.','err');
+  try{connection.save($('backendUrl').value);localStorage.removeItem('jd_review');localStorage.removeItem('jd_device');
+    if(typeof localStorage.key==='function')for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k?.startsWith('jd_activity_history')||k?.startsWith('jd_history_enabled'))localStorage.removeItem(k);}
+    location.reload();
+  }catch(e){msg(e.message,'err');}
+};
+
+const collapsedPackages = new Set();
+const selectedDownloads = new Set();
+let bulkBusy = false;
+let statusBusy = false;
+let lastStatus = null;
+let lastSuccess = 0;
+let lastAttemptFailed = false;
+let renderedStale = false;
+let statusError = "";
+let statusAuthError = false;
+function statusFreshness() {
+  if (!lastStatus || !tok()) return;
+  const age = Math.max(0, Math.floor((Date.now() - lastSuccess) / 1000));
+  const stale = lastAttemptFailed || age >= 15;
+  if (stale !== renderedStale) {
+    renderDownloads(stale);
+    renderedStale = stale;
+  }
+  if (stale) {
+    $("speed").textContent = "— B/s";
+    $("state").textContent = lastAttemptFailed ? (statusAuthError ? "Token rejected" : "Connection unavailable") : "Reconnecting…";
+    $("state").className = "state";
+    $("downloadSummary").textContent = `${lastStatus.links.length} files · last known status`;
+    $("connection").textContent = `Showing last known progress · last updated ${age}s ago. ${lastAttemptFailed ? statusError : "Checking for an update…"}`;
+    $("connection").className = "connection error";
+  } else {
+    $("connection").textContent = `Connected to JDownloader · updated ${age < 2 ? "just now" : age + "s ago"}`;
+    $("connection").className = "connection";
+  }
+}
+async function refresh() {
+  if (statusBusy) return;
+  if (!tok()) {
+    $("state").textContent = "Token required";
+    $("speed").textContent = "— B/s";
+    $("connection").textContent = "Open Connection settings below to connect.";
+    $("downloadSummary").textContent = "Save the access token to load downloads.";
+    $("list").replaceChildren(); lastStatus = null; lastSuccess = 0; selectedDownloads.clear(); fileTools.reset();
+    return;
+  }
+  statusBusy = true; $("refreshStatus").disabled = true;
+  $("refreshStatus").textContent = "Checking…";
+  const requestToken = tok();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const s = await api("/api/status", {signal:controller.signal, cache:"no-store"});
+    if (tok() !== requestToken) return;
+    if (!Array.isArray(s.links) || !s.links.every(l => l && typeof l === "object"))
+      throw new Error("Download status is unavailable. Try Refresh.");
+    lastStatus = s; lastSuccess = Date.now(); lastAttemptFailed = false; renderedStale = false; statusError = ""; statusAuthError = false;
+    $("speed").textContent = DownloadView.number(s.speed) === null ? "— B/s" : DownloadView.size(s.speed) + "/s";
+    $("state").textContent = DownloadView.controllerLabel(s.state);
+    $("state").className = "state" + (s.speed > 0 ? " live" : "");
+    const active = s.links.filter(l => DownloadView.describe(l, s.state).active).length;
+    const finished = s.links.filter(l => l.finished === true).length;
+    $("downloadSummary").textContent = `${active} active · ${s.links.length} total · ${finished} finished`;
+    if(s.deviceId)activityView.setScope(s.deviceId);
+    activityView.observe(s.links); fileTools.confirmed(s.links, false); renderDownloads(false);
+    statusFreshness();
+  } catch(e) {
+    if (tok() !== requestToken) return;
+    lastAttemptFailed = true;
+    statusAuthError = e.status === 401;
+    statusError = e.name === "AbortError" ? "Status check timed out. Check the PC connection and retry." : e.message;
+    $("speed").textContent = "— B/s";
+    $("state").textContent = statusAuthError ? "Token rejected" : "Connection unavailable";
+    $("state").className = "state";
+    const detail = statusError;
+    statusFreshness();
+    // Keep the download snapshot; a failed query does not mean it is empty.
+    $("connection").textContent = `${detail}${lastStatus ? " Showing last known progress." : ""}`;
+    $("connection").className = "connection error";
+    if (!lastStatus) {
+      $("downloadSummary").textContent = "Downloads unavailable";
+      $("list").replaceChildren();
+    }
+  } finally {
+    clearTimeout(timer); statusBusy = false;
+    $("refreshStatus").disabled = false; $("refreshStatus").textContent = "Refresh";
+    if (tok() !== requestToken) refresh();
+  }
+}
+$("refreshStatus").onclick = refresh;
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { statusFreshness(); refresh(); } });
+function renderDownloads(stale = lastAttemptFailed || Date.now()-lastSuccess >= 15000) {
+  if (!lastStatus) return;
+  const search=$("downloadSearch").value.trim().toLocaleLowerCase();
+  const selectable = new Set(lastStatus.links.filter(l=>l.uuid && l.finished !== true).map(l=>String(l.uuid)));
+  for (const id of selectedDownloads) if (!selectable.has(id)) selectedDownloads.delete(id);
+  const filter=$("downloadFilter").value || 'all';
+  const grouped=$("downloadGrouping").value === 'packages';
+  const links=DownloadView.select(lastStatus.links,lastStatus.state,search,filter);
+  $("downloadMatches").textContent=(search || filter !== 'all') ? `${links.length} of ${lastStatus.links.length} files match` : '';
+  $("packageButtons").hidden=!grouped;
+  DownloadView.render($("list"),links,lastStatus.state,stale,{
+    onManage:id=>fileTools.open(id),disabled:fileTools.busy() || bulkBusy,grouped,
+    selected:selectedDownloads,onSelect:(id,checked)=>{checked ? selectedDownloads.add(id) : selectedDownloads.delete(id); renderDownloads();},
+    packages:lastStatus.packages || [],collapsed:collapsedPackages,
+    onCollapse:(id,closed)=>{closed ? collapsedPackages.add(id) : collapsedPackages.delete(id);}
+  });
+  if (!links.length && (search || filter !== 'all')) $("list").firstChild.textContent=search && filter === 'all' ? 'No filenames match this search.' : 'No files match these filters.';
+  if (grouped && lastStatus.packagesAvailable === false) $("downloadMatches").textContent += ' Package names unavailable; files are grouped by package ID.';
+  fileTools.update(lastStatus.links,stale || bulkBusy);
+  const visible = new Set(links.map(l=>String(l.uuid)));
+  const hidden = [...selectedDownloads].filter(id=>!visible.has(id)).length;
+  $("bulkCount").textContent=`${selectedDownloads.size} selected`;
+  $("bulkSummary").textContent=`${selectedDownloads.size} selected${hidden ? ` · ${hidden} hidden by search or status` : ''}`;
+  const blocked = stale || bulkBusy || fileTools.busy() || !selectedDownloads.size || selectedDownloads.size > 100;
+  for (const id of ['bulkEnable','bulkDisable']) $(id).disabled=blocked;
+  $("bulkApply").disabled=blocked || !$("bulkPriority").value;
+  $("bulkPriority").disabled=stale || bulkBusy || fileTools.busy();
+  $("clearDownloads").disabled=bulkBusy || !selectedDownloads.size;
+}
+async function bulkSetting(action, value) {
+  if (bulkBusy || fileTools.busy() || !lastStatus || lastAttemptFailed || Date.now()-lastSuccess >= 15000 || !selectedDownloads.size || selectedDownloads.size > 100) return;
+  const ids=[...selectedDownloads]; bulkBusy=true; renderDownloads();
+  $("bulkMessage").textContent=`Applying to ${ids.length} selected files…`;
+  try {
+    await api('/api/downloads/bulk/'+action,{method:'POST',body:JSON.stringify({ids,[action]:value})});
+    $("bulkMessage").textContent='Settings sent. Refresh and confirm the selected files on the PC.';
+  } catch(e) { $("bulkMessage").textContent=e.message; }
+  finally {selectedDownloads.clear();bulkBusy=false;renderDownloads();refresh();}
+}
+$("bulkEnable").onclick=()=>bulkSetting('enabled',true);
+$("bulkDisable").onclick=()=>bulkSetting('enabled',false);
+$("bulkApply").onclick=()=>{if($("bulkPriority").value) return bulkSetting('priority',$("bulkPriority").value);};
+$("bulkPriority").onchange=()=>renderDownloads();
+$("clearDownloads").onclick=()=>{selectedDownloads.clear();renderDownloads();};
+const activityView=ActivityView.create({document,storage:localStorage,scope:selectedDevice()});
+const fileTools=FileTools.create({document,api,tok:contextKey,onChanged:()=>refresh()});
+$("downloadSearch").oninput=()=>renderDownloads();
+$("downloadFilter").onchange=()=>renderDownloads();
+$("downloadGrouping").onchange=()=>renderDownloads();
+$("expandPackages").onclick=()=>{collapsedPackages.clear();renderDownloads();};
+$("collapsePackages").onclick=()=>{
+  for (const group of DownloadView.groups(lastStatus?.links || [])) collapsedPackages.add(group.id);
+  renderDownloads();
+};
+const pendingView = PendingView.create({document, api, tok:contextKey, onDownloaded: () => { refresh(); loadReview(); }});
+const releaseView=ReleaseView.create({document,load:async()=>{
+  const response=await fetch('releases.json',{cache:'no-store'});
+  if(!response.ok)throw new Error('Release notes unavailable.');
+  return response.json();
+}});
+const advancedView=AdvancedView.create({document,api,storage:localStorage,device:selectedDevice,
+  canSwitch:()=>!reviewBusy && !bulkBusy && !fileTools.busy() && deviceMutations===0,onSwitch:()=>location.reload()});
+SettingsView.create({document,api,crypto:typeof crypto!=='undefined'?crypto:null,navigator:typeof navigator!=='undefined'?navigator:{}});
+advancedView.devices();
+if(typeof location !== 'undefined') {
+  const shared=AdvancedView.sharedLinks(location.hash);
+  if(shared){$('links').value=shared;msg('Shared links are ready. Check the selected PC, then choose Find files or Add only.');history.replaceState(null,'',location.pathname+location.search);}
+}
+refresh(); setInterval(refresh, 3000); setInterval(statusFreshness, 1000);
+setInterval(() => { if (!document.hidden) pendingView.refreshIfVisible(); }, 5000);
+</script>
+</body>
+</html>

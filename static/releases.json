@@ -1,0 +1,135 @@
+{
+  "version": "1.1.4",
+  "releases": [
+    {
+      "version": "1.1.4",
+      "timestamp": "2026-10-21T17:55:20+01:00",
+      "title": "Creator links and public frontend publishing",
+      "changes": [
+        "Add Created by Jamie Reddin and labelled GitHub, Discord, X and Reddit buttons to the footer.",
+        "Keep the README title synchronized with the release version.",
+        "Prepare a frontend-only public repository on the frontend-pages branch, while the complete app stays in a separate private repository."
+      ]
+    },
+    {
+      "version": "1.1.3",
+      "timestamp": "2026-10-21T17:33:58+01:00",
+      "title": "Verified release-note retry",
+      "changes": [
+        "Correct the version-specific retry test fixture and verify the full settings and download regression suites."
+      ]
+    },
+    {
+      "version": "1.1.2",
+      "timestamp": "2026-10-21T17:33:24+01:00",
+      "title": "Release-note retry regression check",
+      "changes": [
+        "Keep release-note retry checks reliable when the installed app version changes."
+      ]
+    },
+    {
+      "version": "1.1.1",
+      "timestamp": "2026-10-21T17:32:03+01:00",
+      "title": "Portable release verification",
+      "changes": [
+        "Make source verification portable across Windows, macOS and Linux and include workflow/dependency changes in release checks.",
+        "Clarify that signed Shortcut downloads are produced by successful GitHub Actions runs."
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "timestamp": "2026-10-21T17:31:17+01:00",
+      "title": "Persistent settings and desktop tools",
+      "changes": [
+        "Edit account and server settings in a popup; save privately on the backend machine across sessions.",
+        "Generate a secure random access token and use a persistent HTTPS backend address for a separately hosted frontend.",
+        "Request JDownloader desktop launch on the backend PC and open OS-aware official installer options.",
+        "Prepare GitHub Actions checks, versioned packaging and Pages frontend deployment; Pages currently requires an eligible plan for this private repository.",
+        "Add a versioned Shortcut draft with installation setup question, a macOS signing attempt and optional published iCloud installation link."
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "timestamp": "2026-10-21T16:35:57+01:00",
+      "title": "Versioned releases and Changes",
+      "changes": [
+        "The footer shows the app version.",
+        "Changes opens a scrollable release history with dates and version numbers.",
+        "Release packaging uses V1.0.0-jd-share.zip naming and checks that app edits include a version update.",
+        "Earlier feature summaries are retained as unversioned history."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21T16:09:26+01:00",
+      "title": "Devices, speed limits, schedules and sharing",
+      "changes": [
+        "Choose a JDownloader PC; reviews, selections and observed history stay tied to its device.",
+        "Discover supported speed-limit settings and save one-time server controller schedules.",
+        "Send an explicit resume/retry request for an unfinished file.",
+        "Use the iPhone Shortcut setup guide to open shared links for manual review. Actual phone setup and live feature checks remain pending."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21T02:22:51+01:00",
+      "title": "Organise Downloads and manage selections",
+      "changes": [
+        "Group Downloads into collapsible packages and combine status filters with filename search.",
+        "Apply Enable, Disable or Priority to selected unfinished files.",
+        "Choose a destination for new links.",
+        "Opt into local observed-completion history and notifications while the page is open."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21T02:04:08+01:00",
+      "title": "Enable recovery verified",
+      "changes": [
+        "Enable stays available when JDownloader does not return an enabled state.",
+        "A live test confirmed that an explicit Enable request restored the test file to Enabled."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21",
+      "title": "Per-file controls and mobile layout",
+      "changes": [
+        "Manage individual unfinished downloads and change priority.",
+        "Refresh the dark/amber layout, improve long filename wrapping and simplify global controls.",
+        "Show the chosen upload filename and size, with separate upload feedback.",
+        "Keep connection settings tucked away behind Settings."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21",
+      "title": "Downloads and LinkGrabber tabs",
+      "changes": [
+        "Browse pending LinkGrabber files, search names and select which files move to Downloads.",
+        "Keep selections across searches and show hidden-selection counts.",
+        "Reject expired, missing or already-used selections before moving files."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21",
+      "title": "Download visibility and connection feedback",
+      "changes": [
+        "Display progress, loaded size, speed, ETA and queue counts.",
+        "Keep last-known cards during a connection failure and hide stale speed/ETA.",
+        "Show clearer token, connection and timeout feedback."
+      ]
+    },
+    {
+      "version": null,
+      "timestamp": "2026-10-21",
+      "title": "Review files before downloading",
+      "changes": [
+        "Find files lists detected results without automatically selecting them.",
+        "Move only chosen results to Downloads and leave other results in LinkGrabber.",
+        "Keep Add only and phone-to-PC uploads available."
+      ]
+    }
+  ]
+}
